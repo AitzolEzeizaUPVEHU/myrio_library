@@ -3,6 +3,8 @@ README.md
 pyproject.toml
 setup.cfg
 setup.py
+examples/analog-inputs-and-outputs.py
+examples/digital-inputs-and-outputs.py
 src/myRIO_library/__init__.py
 src/myRIO_library/myRIO_library.py
 src/myRIO_library/version.py

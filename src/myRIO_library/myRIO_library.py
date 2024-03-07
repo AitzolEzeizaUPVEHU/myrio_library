@@ -12,6 +12,14 @@ from typing import Tuple
 import ctypes
 import pkg_resources
 
+# RGB constants
+
+RED = 2
+GREEN = 1
+BLUE = 4
+WHITE = 7
+RGB_OFF = 0
+
 def u8_to_bits (u8_number: int) -> [bool]:
     """ This function converts u8 values to an array of Booleans """
     mask = 1
@@ -21,13 +29,22 @@ def u8_to_bits (u8_number: int) -> [bool]:
         mask = mask * 2
     return(one_by_one)
 
-def only_one_bit_on (bit_number: int) -> int:
+def only_one_bit_on (bit_number: int, input_number: int=0) -> int:
     """ This function switches on only one bit on a u8 integer """
     u8_number = 0
     if bit_number <= 7:
-        return u8_number | (1 << bit_number)
+        u8_number = (1 << bit_number)
+    return input_number | u8_number
+    #TODO raise a warning if bit_number is too big
+
+def only_one_bit_off (bit_number: int, input_number: int=0) -> int:
+    """ This function switches on only one bit off a u8 integer """
+    
+    if bit_number <= 7:
+        mask = ~(1 << bit_number)
+        return input_number & mask
     else:
-        return u8_number        #TODO raise an error if bit_number is too big
+        return input_number        #TODO raise a warning if bit_number is too big
 
 def raw_to_volts_AB (raw: int) -> float:
     """ This function converts the raw value 
@@ -100,10 +117,6 @@ class MyRIO:
         return sys_handler.read()
 
     def __del__(self):
-        """ This function closes the session with the myRIO FPGA """
-        self.__session.close()
-
-    def cleanup(self):
         """ This function closes the session with the myRIO FPGA """
         self.__session.close()
 
@@ -252,18 +265,21 @@ class MyRIO:
             return None
 
         mask_handler = self.__session.registers[mask_string]
-        save_mask = mask_handler.read()
-        new_mask = only_one_bit_on(channel)
+        saved_mask = mask_handler.read()
+        new_mask = only_one_bit_on(channel, saved_mask)
         mask_handler.write(new_mask)
+
         channel_handler = self.__session.registers[channel_string]
+        saved_value = channel_handler.read()
+
         if value:
-            write_value = only_one_bit_on(channel)
+            value_to_be_written = only_one_bit_on(channel,saved_value)
         else:
-            write_value = 0
+            value_to_be_written = only_one_bit_off(channel,saved_value)
 
-        channel_handler.write(write_value)
+        channel_handler.write(value_to_be_written)
 
-        mask_handler.write(save_mask)   # restore original DIR mask
+        mask_handler.write(saved_mask)   # restore original DIR mask
 
     def write_digital_port(self, 
                            value_low: int, 
@@ -284,8 +300,7 @@ class MyRIO:
         channel_handler_high = self.__session.registers[channel_string_high]
         channel_handler_low.write(value_low)
         channel_handler_high.write(value_high)
-        print(channel_string_low, value_low, channel_string_high, value_high)
-
+ 
 
 
     def write_analog_output(self, channel: int, value: float, port: str ='A'):
