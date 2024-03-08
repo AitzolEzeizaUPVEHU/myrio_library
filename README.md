@@ -31,7 +31,7 @@ opkg install python3 python3-misc python-pip
 
 python -m pip install myRIO_library
 
-Check the examples folders for further help.
+Check the examples folder inside the site-packages/myRIO_library/examples folder for further help.
 
-Last update: 2024/03/07 Aitzol Ezeiza Ramos (UPV/EHU)
+Last update: 2024/03/08 Aitzol Ezeiza Ramos (UPV/EHU)
 
