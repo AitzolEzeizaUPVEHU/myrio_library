@@ -1,0 +1,3 @@
+include src/myRIO_library/data/*
+include src/myRIO_library/examples/*
+include src/myRIO_API/examples/*
