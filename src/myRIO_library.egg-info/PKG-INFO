@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: myRIO_library
-Version: 0.4.0
+Version: 0.4.2
 Summary: A library to control the myRIO board from National Instruments
 Home-page: https://github.com/AitzolEzeizaUPVEHU/myRIO_library
 Download-URL: https://github.com/AitzolEzeizaUPVEHU/myRIO_library/archive/refs/heads/main.zip
@@ -20,7 +20,8 @@ Requires-Dist: Jinja2>=2.11.3
 Requires-Dist: Werkzeug>=1.0.1
 Requires-Dist: click>=7.1.2
 Requires-Dist: itsdangerous>=1.1.0
-Requires-Dist: Waitress>=3.0.0
+Requires-Dist: MarkupSafe>=0.23
+Requires-Dist: Waitress>=1.4.0
 
 # myRIO_library - a library for working with NI myRIO in Python
 

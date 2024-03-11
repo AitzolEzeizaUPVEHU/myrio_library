@@ -6,7 +6,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
 name='myRIO_library',
-version='0.4.0',
+version='0.4.2',
 author='Aitzol Ezeiza Ramos',
 author_email='aitzol.ezeiza@ehu.eus',
 description='A library to control the myRIO board from National Instruments',
