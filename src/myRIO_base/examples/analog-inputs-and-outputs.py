@@ -12,10 +12,10 @@
     Last update: 2024/03/07 Aitzol Ezeiza Ramos (UPV/EHU)
 """
 
-import myRIO_library
+import myRIO_base
 import time
 
-myrio1 = myRIO_library.MyRIO()
+myrio1 = myRIO_base.MyRIO()
 
 # Read onboard accelerometer values
 print('Accelerometer test (5 seconds)')
