@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: myRIO_library
-Version: 1.0.1
+Version: 1.0.2
 Summary: A library to control the myRIO board from National Instruments
 Home-page: https://github.com/AitzolEzeizaUPVEHU/myRIO_library
 Download-URL: https://github.com/AitzolEzeizaUPVEHU/myRIO_library/archive/refs/heads/main.zip

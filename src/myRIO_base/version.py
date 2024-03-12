@@ -1,5 +1,5 @@
 # version.py
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 """ version notes
 0.2.0: added __del__ method to myRio class to close the connection
@@ -11,4 +11,5 @@ __version__ = "1.0.1"
 0.4.0: Addded Flask-waitress-API server (2024/03/11)
 1.0.0: API_client added and a name change for the myRIO_base package (2024/03/12)
 1.0.1: minor fix: format change to solve 3.5 compatibility (2024/03/12)
+1.0.2: minor change in the API client examples (2024/03/12)
 """
