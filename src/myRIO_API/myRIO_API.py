@@ -1,6 +1,6 @@
 """ myRIO API: A RESTful API server for the myRIO
 
-    Last update: 2024/03/11 Aitzol Ezeiza Ramos UPV/EHU
+    Last update: 2024/03/14 Aitzol Ezeiza Ramos UPV/EHU
 
     This library uses Flask and Waitress to create an API
     based on myRIO_library. Not all the functions are
@@ -9,6 +9,7 @@
         · Analog Inputs and Outputs
         · onboard button and LEDs
         · onboard accelerometer
+        - MXP board components
     The default port is 8080. Some examples of API calls
     (using curl) would be the following:
 
@@ -42,7 +43,6 @@ def setup():
     global myrio_handler
     myrio_handler = myRIO_base.MyRIO()
 
-
 @app.route('/digital_input/<int:channel_in>', methods=['GET'])
 def get_digital_input(channel_in: int):
     """ Returns the value (true/false) of a digital input """
@@ -54,9 +54,9 @@ def get_digital_input(channel_in: int):
 def set_digital_output(channel_in: int, value_in: int):
     """ Sets the value (true 1, false 0) of a digital output """
     port_in = request.args.get('port', default='A', type=str)
-    value = myrio_handler.write_digital_output(channel=channel_in,
-                                             port=port_in,
-                                             value=bool(value_in))
+    myrio_handler.write_digital_output(channel=channel_in,
+                                       port=port_in,
+                                       value=bool(value_in))
     return jsonify({'success': True})
 
 @app.route('/analog_input/<int:channel_in>', methods=['GET'])
@@ -70,9 +70,7 @@ def get_analog_input(channel_in: int):
 def set_analog_output(channel_in: int, value_in: float):
     """ Sets the value (volts in float type) of an analog output """
     port_in = request.args.get('port', default='A', type=str)
-    value = myrio_handler.write_analog_output(channel=channel_in,
-                                             port=port_in,
-                                             value=value_in)
+    myrio_handler.write_analog_output(channel=channel_in, port=port_in, value=value_in)
     return jsonify({'success': True})
 
 # Define routes for the onboard inputs and outputs
@@ -85,7 +83,7 @@ def get_onboard_button():
 @app.route('/onboard_leds/<int:value_in>', methods=['POST'])
 def set_onboard_leds(value_in: int):
     """ Sets the value (0..15 integer) of the onboard LEDs """
-    value = myrio_handler.write_leds_integer(value_in)
+    myrio_handler.write_leds_integer(value_in)
     return jsonify({'success': True})
 
 @app.route('/onboard_accelerometer', methods=['GET'])
@@ -98,6 +96,47 @@ def get_onboard_accelerometer():
         'z': values[2]
     }
     return jsonify(response_data)
+
+# MXP board components: buttons, RGB LED, Temperature sensor, Light sensor
+
+@app.route('/mxp_button/<int:button_in>', methods=['GET'])
+def get_mxp_button(button_in: int):
+    """ Returns the value (true/false) of one of the buttons.
+        We expect 1 or 2, first (black) and second (white).
+    """
+    port_in = request.args.get('port', default='A', type=str)
+    value = myrio_handler.read_MXP_button(button=button_in,port=port_in)
+    return jsonify({'value': value})
+
+@app.route('/mxp_rgb_color/<int:color_in>', methods=['POST'])
+def set_mxp_rgb_color(color_in: int):
+    """ Sets the color (0 to 7) of the MXP RGB LED
+        Remember that the order is G(0)R(1)B(2)
+        Green is 1, Red is 2, Blue is 4
+        White is 7 and Off is 0.
+    """
+    port_in = request.args.get('port', default='A', type=str)
+    myrio_handler.write_MXP_RGB_LED(color=color_in, port=port_in)
+    return jsonify({'success': True})
+
+@app.route('/mxp_temperature', methods=['GET'])
+def get_mxp_temperature():
+    """ Returns the temperature (degrees in float type) of
+        the NTC temperature sensor (MXP board)
+    """
+    port_in = request.args.get('port', default='A', type=str)
+    value = myrio_handler.read_MXP_temperature(port=port_in)
+    return jsonify({'value': value})
+
+@app.route('/mxp_luminosity', methods=['GET'])
+def get_mxp_luminosity():
+    """ Returns the luminosity (percentage in float type) of
+        the LDR light sensor (MXP board)
+    """
+    port_in = request.args.get('port', default='A', type=str)
+    value = myrio_handler.read_MXP_luminosity(port=port_in)
+    return jsonify({'value': value})
+
 
 if __name__ == '__main__':
     from waitress import serve

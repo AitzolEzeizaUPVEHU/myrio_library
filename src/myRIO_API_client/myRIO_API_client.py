@@ -1,6 +1,6 @@
 """ myRIO API client: An API client for the myRIO API server
 
-    Last update: 2024/03/12 Aitzol Ezeiza Ramos UPV/EHU
+    Last update: 2024/03/15 Aitzol Ezeiza Ramos UPV/EHU
 
     This is the client of the myRIO API server. Please refer to the
     server documentation for further help. 
@@ -9,6 +9,7 @@
         · Analog Inputs and Outputs
         · onboard button and LEDs
         · onboard accelerometer
+        - mxp board components
     The default port is 8080. Some examples of API calls
     (using curl) would be the following:
 
@@ -54,6 +55,12 @@ class MyRIO_API_Client:
         get_onboard_button
         set_onboard_leds
         get_onboard_accelerometer
+    
+    MXP board methods:
+        get_mxp_button
+        set_mxp_rgb_color
+        get_mxp_temperature
+        get_mxp_luminosity
 """
 
     def __init__(self, ip_address: str=DEFAULT_HOST_IP,
@@ -144,9 +151,58 @@ class MyRIO_API_Client:
         response=self.get_data(endpoint)
         return response
 
+    """
+    MXP board methods:
+        get_mxp_button
+        set_mxp_rgb_color
+        get_mxp_temperature
+        get_mxp_luminosity
+    """
+
+    def get_mxp_button(self, button_in: int, port_in: str='A') -> bool:
+        """ Returns the value (true/false) of one of the MXP buttons """
+        if port_in == 'A':
+            endpoint = 'mxp_button/'+str(button_in)
+        else:
+            endpoint = 'mxp_button/'+str(button_in)+'?port='+port_in
+
+        response=self.get_data(endpoint)
+        return response
+
+    def set_mxp_rgb_color(self, color_in: int):
+        """ Sets the value (0..7 integer) of the MXP RGB LED """
+        endpoint = 'mxp_rgb_color/'+str(color_in)
+        response=self.post_data(endpoint)
+
+    def get_mxp_temperature(self, port_in: str='A') -> float:
+        """ Returns the temperature (degrees in float type)
+            of the MXP NTC temperature sensor (AI0)
+        """
+        if port_in == 'A':
+            endpoint = 'mxp_temperature'
+        else:
+            endpoint = 'mxp_temperature'+'?port='+port_in
+        response=self.get_data(endpoint)
+        return float(response)
+
+    def get_mxp_luminosity(self, port_in: str='A') -> float:
+        """ Returns the luminosity (percentage in float type)
+            of the MXP LDR light sensor (AI1)
+        """
+        if port_in == 'A':
+            endpoint = 'mxp_luminosity'
+        else:
+            endpoint = 'mxp_luminosity'+'?port='+port_in
+        response=self.get_data(endpoint)
+        return float(response)
+
+
+
 if __name__ == "__main__":
     myRIO = MyRIO_API_Client()
     print('Accelerometer:')
     print(myRIO.get_onboard_accelerometer())
+    print('MXP temperature')
+    print(myRIO.get_mxp_temperature())
     print('More examples in ./examples/client_examples.py')
 

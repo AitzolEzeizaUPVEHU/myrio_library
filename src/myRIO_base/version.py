@@ -1,5 +1,5 @@
 # version.py
-__version__ = "1.0.3"
+__version__ = "1.1.0"
 
 """ version notes
 0.2.0: added __del__ method to myRio class to close the connection
@@ -13,4 +13,5 @@ __version__ = "1.0.3"
 1.0.1: minor fix: format change to solve 3.5 compatibility (2024/03/12)
 1.0.2: minor change in the API client examples (2024/03/12)
 1.0.3: GitHub Actions (2024/03/14)
+1.1.0: MXP functions added to base, API and API client(2024/03/15)
 """

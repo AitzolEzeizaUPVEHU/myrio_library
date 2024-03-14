@@ -92,6 +92,19 @@ def volts_to_raw_audio (volts: float) -> int:
     unsigned_value = ctypes.c_uint16(signed_value).value
     return unsigned_value
 
+def volts_to_temperature (volts: float) -> float:
+    """ This function converts values in Volts 
+    to temperature in Celsius degrees
+    """
+    return ((volts-1.7)*10/-0.3)+20
+
+def volts_to_luminosity (volts: float) -> float:
+    """ This function converts values in Volts 
+    to luminosity in percentage (0-100%)
+    """
+    return 100-(volts*30.3)
+
+
 class MyRIO:
     """Class MyRIO: class for accessing NI myRIO inputs and outputs using nifgpa
 
@@ -149,6 +162,30 @@ class MyRIO:
             #TODO how to report the exception (port name error)
             return None
 
+    def read_MXP_temperature(self, channel: int=0, port: str ='A') -> float:
+        """ returns the temperature in Celsius degrees of one of the 
+            AI channels (default channel:0, default port: A)
+        """
+        channel_string = 'AI.' + port + '_' + str(channel) + '.VAL'
+        channel_handler = self.__session.registers[channel_string]
+        if port=='A' or port == 'B':
+            return volts_to_temperature(raw_to_volts_AB(channel_handler.read()))
+        else:
+            #TODO how to report the exception (port name error)
+            return None
+
+    def read_MXP_luminosity(self, channel: int =1, port: str ='A') -> float:
+        """ returns the luminosity in percentage of one of the 
+            AI channels (default channel:1, default port: A)
+        """
+        channel_string = 'AI.' + port + '_' + str(channel) + '.VAL'
+        channel_handler = self.__session.registers[channel_string]
+        if port=='A' or port == 'B':
+            return volts_to_luminosity(raw_to_volts_AB(channel_handler.read()))
+        else:
+            #TODO how to report the exception (port name error)
+            return None
+
     def read_digital_input(self, channel: int, port: str ='A') -> bool:
         """ returns the Boolean value of one of the DIO input channels (default port: A) """
 
@@ -178,6 +215,18 @@ class MyRIO:
         raw_value_high = channel_handler_high.read()
         bool_array = u8_to_bits(raw_value_low) + u8_to_bits(raw_value_high)
         return bool_array
+
+    def read_MXP_button(self, button: int =1, port: str ='A') -> bool:
+        """ returns the Boolean value of one of the MXP buttons (default port: A) 
+            We spect 1 for the first button, 2 for the second one.
+            Most of our cards have a black button first, a white button second.
+        """
+        channel_string = 'DIO.' + port + '_7:0.IN'
+        array_index = int(button+2)
+        channel_handler = self.__session.registers[channel_string]
+        raw_value = channel_handler.read()
+        bool_array = u8_to_bits(raw_value)
+        return bool_array[array_index]
 
     def read_button(self) -> bool:
         """ returns the Boolean value of the myRIO onboard button """
@@ -301,8 +350,14 @@ class MyRIO:
         channel_handler_low.write(value_low)
         channel_handler_high.write(value_high)
  
+    def write_MXP_RGB_LED(self, color: int, port: str ='A'):
+        """ writes a color on the myRIO MXP RGB LED (default port: A) """
 
-
+        self.set_DIO_mask(port=port)    # default mask is OK for the RGB LED
+        channel_string_low = 'DIO.' + port + '_7:0.OUT'
+        channel_handler_low = self.__session.registers[channel_string_low]
+        channel_handler_low.write(color)
+ 
     def write_analog_output(self, channel: int, value: float, port: str ='A'):
         """ writes a value (in volts) on an AO channel (default port: A) """
     
@@ -321,7 +376,35 @@ class MyRIO:
         go_handler = self.__session.registers['AO.SYS.GO']
         go_handler.write(True)
 
+if __name__ == "__main__":
+    print("This is a library for working with NI myRIO in Python")
+    print("It is not intended to be run directly, but to be imported in other programs.")
+    print("Please, see the documentation for more information.")
+    from time import sleep
+    myrio1 = MyRIO()
+
+    print("Read digital port A:")
+    print(myrio1.read_digital_port(port='A'))
+    print("Read temperature from MXP port A, channel 0:")
+    print(myrio1.read_MXP_temperature())
+    print("Read luminosity from MXP port A, channel 1:")
+    print(myrio1.read_MXP_luminosity())
+    print("RGB LED in MXP port A: RED")
+    myrio1.write_MXP_RGB_LED(RED)
+    sleep(1)
+    print("RGB LED in MXP port A: GREEN")
+    myrio1.write_MXP_RGB_LED(GREEN)
+    sleep(1)
+    print("RGB LED in MXP port A: BLUE")
+    myrio1.write_MXP_RGB_LED(BLUE)
+    sleep(1)
+    print("RGB LED in MXP port A: OFF")
+    myrio1.write_MXP_RGB_LED(RGB_OFF)
+
+
+        
 """ TODO
+
 There are some extra features that we do not cover.
 They are interesting, but are not so commonly used, and given
 their complexity, we leave them for future development.
@@ -344,4 +427,5 @@ https://github.com/ni/nifpga-python/
 We also use typing and ctypes.
 
 First version: 2024/02/28
+Current version: 2024/03/14
 """
