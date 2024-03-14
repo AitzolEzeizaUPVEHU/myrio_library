@@ -6,7 +6,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
 name='myRIO_library',
-version='1.1.0',
+version='1.1.2',
 author='Aitzol Ezeiza Ramos',
 author_email='aitzol.ezeiza@ehu.eus',
 description='A library to control the myRIO board from National Instruments',
@@ -17,8 +17,8 @@ packages=find_packages('src'),
 package_dir={'': 'src'},
 include_package_data=True,
 package_data={
-        'myRIO_base': ['examples/*'],
         'myRIO_base': ['data/*'],
+        'myRIO_base': ['examples/*'],
         'myRIO_API': ['examples/*'],
         'myRIO_API_client': ['examples/*'],
     },

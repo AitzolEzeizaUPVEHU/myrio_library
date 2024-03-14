@@ -14,28 +14,28 @@
 """
 
 import myRIO_base as myRIO
-import time
+from time import sleep
 
 myrio1 = myRIO.MyRIO()
 
 print("Read temperature from MXP port A, channel 0:")
 print(myrio1.read_MXP_temperature())
 print("Push the first button to continue (DIO3)")
-while not (myrio1.read_MXP_button(1))
+while not (myrio1.read_MXP_button(1)):
     sleep(0.1)
 print("Read luminosity from MXP port A, channel 1:")
-print("Push the second button to continue (DIO4)")
-while not (myrio1.read_MXP_button(2))
-    sleep(0.1)
 print(myrio1.read_MXP_luminosity())
+print("Push the second button to continue (DIO4)")
+while not (myrio1.read_MXP_button(2)):
+    sleep(0.1)
 print("RGB LED in MXP port A: RED")
-myrio1.write_MXP_RGB_LED(RED)
+myrio1.write_MXP_RGB_LED(myRIO.RED)
 sleep(1)
 print("RGB LED in MXP port A: GREEN")
-myrio1.write_MXP_RGB_LED(GREEN)
+myrio1.write_MXP_RGB_LED(myRIO.GREEN)
 sleep(1)
 print("RGB LED in MXP port A: BLUE")
-myrio1.write_MXP_RGB_LED(BLUE)
+myrio1.write_MXP_RGB_LED(myRIO.BLUE)
 sleep(1)
 print("RGB LED in MXP port A: OFF")
-myrio1.write_MXP_RGB_LED(RGB_OFF)
+myrio1.write_MXP_RGB_LED(myRIO.RGB_OFF)

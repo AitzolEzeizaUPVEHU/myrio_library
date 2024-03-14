@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: myRIO_library
-Version: 1.1.0
+Version: 1.1.2
 Summary: A library to control the myRIO board from National Instruments
 Home-page: https://github.com/AitzolEzeizaUPVEHU/myRIO_library
 Download-URL: https://github.com/AitzolEzeizaUPVEHU/myRIO_library/archive/refs/heads/main.zip
@@ -42,12 +42,14 @@ inside the myRIO. myRIO runs a reduced version of Linux named NI Linux RT.
 
 https://www.ni.com/en/shop/linux/under-the-hood-of-ni-linux-real-time.html
 
-The main idea is to be able to install the base library inside myRIO and to
-run basic functions easily.
+The main idea is to be able to install the base library inside the myRIO and
+to run basic functions easily.
 
 If you want to use the base library, you will need an updated NI Linux RT image,
 SSH enabled (it is easy to set in NI MAX, the configuration tool), and Internet
-enabled on your myRIO (check the myRIO documentation for that).
+enabled on your myRIO (check the myRIO documentation for that). You will need
+a privileged account (in myRIO the default administrator user is admin) if you
+want to have access to the FPGA registers (the basic package, nifpga, needs that).
 
 When ready, you should connect (ssh) to the myRIO and ensure that everything
 is up-to-date before installing myRIO_library:
@@ -78,5 +80,5 @@ You will need communication with the myRIO (via USBLAN or WiFi)
 in order to use the API. More info in the specific docs about
 the myRIO_API_client package.
 
-Last update: 2024/03/12 Aitzol Ezeiza Ramos (UPV/EHU)
+Last update: 2024/03/15 Aitzol Ezeiza Ramos (UPV/EHU)
 
