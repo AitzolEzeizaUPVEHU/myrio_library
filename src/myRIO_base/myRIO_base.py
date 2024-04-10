@@ -12,6 +12,7 @@ from typing import Tuple
 import ctypes
 import pkg_resources
 
+
 # RGB constants
 
 RED = 2
@@ -19,6 +20,10 @@ GREEN = 1
 BLUE = 4
 WHITE = 7
 RGB_OFF = 0
+
+
+# Support functions. They are not part of the class MyRIO, but they are used by it.
+# Feel free to use them in your own programs.
 
 def u8_to_bits (u8_number: int) -> [bool]:
     """ This function converts u8 values to an array of Booleans """
@@ -104,9 +109,29 @@ def volts_to_luminosity (volts: float) -> float:
     """
     return 100-(volts*30.3)
 
+def extract_waveform_from_csv_file(file_name: str) -> [int]:
+    """ This function extracts a stereo waveform from a .csv file
+    and returns it as a list of I16 integers.
+    The .csv format is very basic for an audio file, but
+    the myRIO has memory limitations, so the audio files
+    must be mono and quite shorts.
+    We have tried the wave library from Python, but it does not work
+    properly with the myRIO, so we have used the csv format that 
+    can be easily generated (we used a simple LabVIEW program for that).
+    """
+    # Open and read a csv file 
+    with open(file_name, 'r') as file:
+        data = file.readlines()     # Read all the lines of the file
+        waveform = []               # Create an empty list for the waveform
+        for line in data:           # Read line by line
+            waveform.append(volts_to_raw_audio(float(line))) # Append the integer value to the list
+
+    return waveform                # Return the list
+
+
 
 class MyRIO:
-    """Class MyRIO: class for accessing NI myRIO inputs and outputs using nifgpa
+    """ Class MyRIO: class for accessing NI myRIO inputs and outputs using nifgpa
 
     NI myRIO is a programmable device with digital and analog inputs and outputs.
     It is usually programmed in LabVIEW, but it can be programmed in Python too.
@@ -376,6 +401,21 @@ class MyRIO:
         go_handler = self.__session.registers['AO.SYS.GO']
         go_handler.write(True)
 
+    def play_waveform(self, waveform: [int]):
+        """ plays a waveform on the myRIO Audio Output channels """
+    
+        channel_string_left = 'AO.AudioOut_L.VAL'
+        channel_string_right = 'AO.AudioOut_R.VAL'
+        channel_handler_left = self.__session.registers[channel_string_left]
+        channel_handler_right = self.__session.registers[channel_string_right]
+
+        go_handler = self.__session.registers['AO.SYS.GO']
+
+        for i in range(len(waveform)):
+            channel_handler_left.write(waveform[i])
+            channel_handler_right.write(waveform[i])
+            go_handler.write(True)
+
 if __name__ == "__main__":
     print("This is a library for working with NI myRIO in Python")
     print("It is not intended to be run directly, but to be imported in other programs.")
@@ -383,6 +423,7 @@ if __name__ == "__main__":
     from time import sleep
     myrio1 = MyRIO()
 
+    
     print("Read digital port A:")
     print(myrio1.read_digital_port(port='A'))
     print("Read temperature from MXP port A, channel 0:")
@@ -400,6 +441,14 @@ if __name__ == "__main__":
     sleep(1)
     print("RGB LED in MXP port A: OFF")
     myrio1.write_MXP_RGB_LED(RGB_OFF)
+
+    
+    # Play a simple waveform (2024/04/10)
+    print("Playing a simple waveform")
+    csv_file = pkg_resources.resource_filename('myRIO_base', 'examples/PinkPanther.csv')
+    my_waveform = extract_waveform_from_csv_file(csv_file)
+    myrio1.play_waveform(my_waveform)
+
 
 
         
