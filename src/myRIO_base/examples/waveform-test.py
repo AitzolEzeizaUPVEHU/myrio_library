@@ -15,7 +15,7 @@ myrio1 = myRIO.MyRIO()
 
 # Play a simple waveform using raw data
 print("Playing a simple waveform")
-csv_file = pkg_resources.resource_filename('myRIO_base', 'examples/PinkPanther.csv')
+csv_file = pkg_resources.resource_filename('myRIO_base', 'examples/PacManDeath.csv')
 print("Waveform file: ", csv_file)
 my_waveform = extract_waveform_from_csv_file(csv_file)
 myrio1.play_waveform(my_waveform)
