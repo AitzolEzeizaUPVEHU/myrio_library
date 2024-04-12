@@ -61,6 +61,9 @@ class MyRIO_API_Client:
         set_mxp_rgb_color
         get_mxp_temperature
         get_mxp_luminosity
+    
+    Extra methods:
+        set_pwm_output
 """
 
     def __init__(self, ip_address: str=DEFAULT_HOST_IP,
@@ -195,6 +198,16 @@ class MyRIO_API_Client:
             endpoint = 'mxp_luminosity'+'?port='+port_in
         response=self.get_data(endpoint)
         return float(response)
+
+    # Extra methods
+
+    def set_pwm_output(self, channel_in: int, value_in: float, port_in: str='A'):
+        """ Sets the value (duty cycle in float type) of a PWM output """
+        if port_in == 'A':
+            endpoint = 'analog_output/'+str(channel_in)+'/'+str(value_in)
+        else:
+            endpoint = 'analog_output/'+str(channel_in)+'/'+str(value_in)+'?port='+port_in
+        self.post_data(endpoint)
 
 
 

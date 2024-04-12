@@ -171,6 +171,30 @@ class MyRIO:
         mask_handler_low.write(mask_low)    # 7 is 00000111 where 1 is OUT
         mask_handler_high.write(mask_high)    # 0 is 00000000 where 0 is IN
 
+    def update_DIO_mask(self, channel: int, is_output: bool, port: str ='A'):
+        """ Updates the current DIO mask to change the behaviour of one channe """
+
+        dir_string_low = 'DIO.' + port + '_' + '7:0' + '.DIR'
+        dir_string_high = 'DIO.' + port + '_' + '15:8' + '.DIR'
+        mask_handler_low = self.__session.registers[dir_string_low]
+        mask_handler_high = self.__session.registers[dir_string_high]
+        current_dio_mask_low = mask_handler_low.read()
+        current_dio_mask_high = mask_handler_high.read()
+
+        if is_output:  # change channel direction to output
+            if channel < 8:
+                new_dio_mask_low = only_one_bit_on(channel,current_dio_mask_low)
+                mask_handler_low.write(new_dio_mask_low)
+            else:
+                new_dio_mask_high = only_one_bit_on(channel-8,current_dio_mask_high)
+                mask_handler_high.write(new_dio_mask_high)
+        else:
+            if channel < 8:
+                new_dio_mask_low = only_one_bit_off(channel,current_dio_mask_low)
+                mask_handler_low.write(new_dio_mask_low)
+            else:
+                new_dio_mask_high = only_one_bit_off(channel-8,current_dio_mask_high)
+                mask_handler_high.write(new_dio_mask_high)
 
     def read_analog_input(self, channel: int, port: str ='A') -> float:
         """ returns the value in volts of one of the AI channels (default port: A) """
@@ -401,6 +425,31 @@ class MyRIO:
         go_handler = self.__session.registers['AO.SYS.GO']
         go_handler.write(True)
 
+    def read_audio_input(self, channel: str='L') -> float:
+        """ returns the value in volts of one of the Audio Input channels """
+        if channel == 'L' or channel == 'R':
+            channel_string = 'AI.AudioIn_' + str(channel) + '.VAL'
+        else:
+            #TODO how to report the exception (channel name error)
+            channel_string = 'AI.AudioIn_L.VAL'
+        
+        channel_handler = self.__session.registers[channel_string]
+        return raw_to_volts_audio(channel_handler.read())
+
+    def write_audio_output(self, value: float, channel: str='L'):
+        """ writes a value (in volts) on an Audio Output channel """
+        if channel == 'L' or channel == 'R':
+            channel_string = 'AO.AudioOut_' + str(channel) + '.VAL'
+        else:
+            #TODO how to report the exception (channel name error)
+            channel_string = 'AO.AudioOut_L.VAL'
+        
+        channel_handler = self.__session.registers[channel_string]
+        raw_value = volts_to_raw_audio(value)
+        channel_handler.write(raw_value)
+        go_handler = self.__session.registers['AO.SYS.GO']
+        go_handler.write(True)
+
     def play_waveform(self, waveform: [int]):
         """ plays a waveform on the myRIO Audio Output channels """
     
@@ -416,6 +465,106 @@ class MyRIO:
             channel_handler_right.write(waveform[i])
             go_handler.write(True)
 
+    def read_audio_input_noise_level(self) -> float:
+        """ returns the noise level % of the Audio Input channels """
+        window_size = 100
+        max_volts = 2.5
+
+        channel_string_L = 'AI.AudioIn_L.VAL'
+        channel_string_R = 'AI.AudioIn_R.VAL'
+        
+        channel_handler_L = self.__session.registers[channel_string_L]
+        channel_handler_R = self.__session.registers[channel_string_R]
+
+        noise_level_sum = 0.0
+        for i in range(window_size):
+            volume_L = raw_to_volts_audio(channel_handler_L.read())
+            volume_R = raw_to_volts_audio(channel_handler_R.read())
+            noise_level_sum += abs(volume_L) + abs(volume_R)
+
+        mean_value = noise_level_sum / (2*window_size)
+        return mean_value * 100.0 / max_volts
+
+    def config_PWM_output(self, channel: int, frequency: float=2000.0, port: str ='A') -> int:
+        """ configs a PWM output to work with a certain frequency (default port: A)
+            The frequency should be expressed in Hz (default 2000 Hz).
+            The range of frequency is 40Hz-40KHz 
+            Returns X (the value of the MAX register)
+        """
+        BASE_FREQUENCY = 40000000.0
+
+        if (frequency < 40.0) or (frequency > 40000.0):
+            raise Exception('Frequency out of range (40Hz-40KHz)')
+        elif frequency < 80.0 :
+            divider_N = 16
+            divider_code = 5
+        elif frequency < 160.0 :
+            divider_N = 8
+            divider_code = 4
+        elif frequency < 320.0 :
+            divider_N = 4
+            divider_code = 3
+        elif frequency < 800.0 :
+            divider_N = 2
+            divider_code = 2
+        else:
+            divider_N = 1
+            divider_code = 1
+        
+        max_value_X = int((BASE_FREQUENCY/frequency)/divider_N)-1
+        
+        self.update_DIO_mask(channel=8, is_output=True, port='B')
+        self.update_DIO_mask(channel=9, is_output=True, port='B')
+        self.update_DIO_mask(channel=10, is_output=True, port='B')
+
+        channel_string_sys = 'SYS.SELECT' + port
+        channel_handler_sys = self.__session.registers[channel_string_sys]
+        current_value = channel_handler_sys.read()
+        new_value = only_one_bit_on(bit_number=channel+2, input_number=current_value)
+        channel_handler_sys.write(new_value)
+        
+        channel_string_cnfg = 'PWM.' + port + '_' + str(channel) + '.CNFG'
+        channel_handler_cnfg = self.__session.registers[channel_string_cnfg]
+        channel_handler_cnfg.write(4)
+
+        channel_string_cs = 'PWM.' + port + '_' + str(channel) + '.CS'
+        channel_handler_cs = self.__session.registers[channel_string_cs]
+        channel_handler_cs.write(divider_code)
+
+        channel_string_max = 'PWM.' + port + '_' + str(channel) + '.MAX'
+        channel_handler_max = self.__session.registers[channel_string_max]
+        channel_handler_max.write(max_value_X)
+        return max_value_X
+
+
+    def write_PWM_output(self, channel: int, duty_cycle: float, X: int=19999, port: str ='A'):
+        """ writes a duty cycle value (in percentage) on a PWM channel (default port: A) """
+
+        duty_cycle_code = int((duty_cycle/100) * (X+1)) # X is the MAX value of the PWM counter
+
+        channel_string_cmp = 'PWM.' + port + '_' + str(channel) + '.CMP'
+        channel_handler_cmp = self.__session.registers[channel_string_cmp]
+        channel_handler_cmp.write(duty_cycle_code)
+
+    def display_color_PWM(self, R: int=0, G: int=0, B: int=0):
+        """ This is not a generic function, it is only an example.
+            It uses the PWM channels in port B to control an RGB
+            LED display. The frequencies of each channel and the resistors
+            used in the circuit are specific for each RGB LED display.
+        """
+
+        duty_cycle_R = int(R * 100 / 256)
+        duty_cycle_G = int(G * 100 / 256)
+        duty_cycle_B = int(B * 100 / 256)
+        
+        X_0 = self.config_PWM_output(channel=0, frequency=5000.0,port='B')
+        X_1 = self.config_PWM_output(channel=1, port='B')
+        X_2 = self.config_PWM_output(channel=2, port='B')
+        self.write_PWM_output(channel=0, duty_cycle=duty_cycle_R, X=X_0, port='B')
+        self.write_PWM_output(channel=1, duty_cycle=duty_cycle_G, X=X_1, port='B')
+        self.write_PWM_output(channel=2, duty_cycle=duty_cycle_B, X=X_2, port='B')
+
+
 if __name__ == "__main__":
     print("This is a library for working with NI myRIO in Python")
     print("It is not intended to be run directly, but to be imported in other programs.")
@@ -423,7 +572,6 @@ if __name__ == "__main__":
     from time import sleep
     myrio1 = MyRIO()
 
-    
     print("Read digital port A:")
     print(myrio1.read_digital_port(port='A'))
     print("Read temperature from MXP port A, channel 0:")
@@ -441,14 +589,42 @@ if __name__ == "__main__":
     sleep(1)
     print("RGB LED in MXP port A: OFF")
     myrio1.write_MXP_RGB_LED(RGB_OFF)
-
     
-    # Play a simple waveform (2024/04/10)
+    # Play a simple waveform using raw data
     print("Playing a simple waveform")
     csv_file = pkg_resources.resource_filename('myRIO_base', 'examples/PacManDeath.csv')
     my_waveform = extract_waveform_from_csv_file(csv_file)
     myrio1.play_waveform(my_waveform)
 
+    # Get the noise level of the Audio Input channels
+    print("Noise level of the Audio Input channels:")
+    print(myrio1.read_audio_input_noise_level())
+
+    # Test the PWM outputs
+    print("PWM output test (port B: PWM0, PWM1, PWM2):")
+    print("Configuring...")
+    X_0 = myrio1.config_PWM_output(channel=0, frequency=5000.0,port='B')
+    X_1 = myrio1.config_PWM_output(channel=1, port='B')
+    X_2 = myrio1.config_PWM_output(channel=2, port='B')
+
+    print("10% 45% 11,5%")
+    myrio1.write_PWM_output(channel=0, duty_cycle=10, X=X_0, port='B')
+    myrio1.write_PWM_output(channel=1, duty_cycle=45, X=X_1, port='B')
+    myrio1.write_PWM_output(channel=2, duty_cycle=11.5, X=X_2, port='B')
+    sleep(2)
+
+    print("0% 0% 0%")
+    myrio1.write_PWM_output(channel=0, duty_cycle=0.0, port='B')
+    myrio1.write_PWM_output(channel=1, duty_cycle=0.0, port='B')
+    myrio1.write_PWM_output(channel=2, duty_cycle=0.0, port='B')
+    
+
+    print("Display RGB color orange (252, 161, 3):")
+    myrio1.display_color_PWM(252,161,3)
+    sleep(10)
+    myrio1.display_color_PWM(0,0,0)
+
+        
 
 
         
@@ -458,11 +634,13 @@ There are some extra features that we do not cover.
 They are interesting, but are not so commonly used, and given
 their complexity, we leave them for future development.
 The features we did not cover are:
-1.-PWM and ENC
+1.-ENC
 2.-I2C and SPI
 3.-IRQs
 
 It would be interesting too to improve the audio functions.
+They are very simple and it does not seem straightforward
+to improve them.
 """
 
 """ Credits
@@ -473,8 +651,7 @@ FPGA on NI RIO devices.
 
 https://github.com/ni/nifpga-python/
 
-We also use typing and ctypes.
 
 First version: 2024/02/28
-Current version: 2024/03/14
+Current version: 2024/04/12
 """

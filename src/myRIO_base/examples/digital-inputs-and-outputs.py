@@ -1,6 +1,6 @@
 """ Usage examples of the MyRIO class: digital inputs and outputs
 
-    This examples shows how to use the DIO ports and the
+    This examples show how to use the DIO ports and the
     onboard button and LEDs.
 
     We have a set of myRIOs in our facilities that we complement

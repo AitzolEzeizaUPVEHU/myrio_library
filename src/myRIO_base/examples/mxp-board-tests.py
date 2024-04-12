@@ -1,6 +1,6 @@
 """ Usage examples of the MyRIO class: MXP board tests
 
-    This examples shows how to use the electronic components
+    This examples show how to use the electronic components
     we already have on our MXP boards. It serves as example of
     more sophisticated functions we added to myRIO_base.
 

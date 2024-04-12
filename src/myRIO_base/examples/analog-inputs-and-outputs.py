@@ -1,6 +1,6 @@
 """ Usage examples of the MyRIO class: analog inputs and outputs
 
-    This examples shows how to use the analog inputs and outputs
+    This examples show how to use the analog inputs and outputs
     and the onboard Accelerometer.
 
     We have a set of myRIOs in our facilities that we complement
