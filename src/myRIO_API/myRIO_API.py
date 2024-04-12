@@ -137,17 +137,9 @@ def get_mxp_luminosity():
     value = myrio_handler.read_MXP_luminosity(port=port_in)
     return jsonify({'value': value})
 
-@app.route('/mxp_luminosity', methods=['GET'])
-def get_mxp_luminosity():
-    """ Returns the luminosity (percentage in float type) of
-        the LDR light sensor (MXP board)
-    """
-    port_in = request.args.get('port', default='A', type=str)
-    value = myrio_handler.read_MXP_luminosity(port=port_in)
-    return jsonify({'value': value})
-
 
 # Extra functions: set PWM output
+
 @app.route('/pwm_output/<int:channel_in>/<float:value_in>', methods=['POST'])
 def set_pwm_output(channel_in: int, value_in: float):
     """ Sets the value (duty cycle in float type) of a PWM output """

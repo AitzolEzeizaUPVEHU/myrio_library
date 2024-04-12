@@ -204,9 +204,9 @@ class MyRIO_API_Client:
     def set_pwm_output(self, channel_in: int, value_in: float, port_in: str='A'):
         """ Sets the value (duty cycle in float type) of a PWM output """
         if port_in == 'A':
-            endpoint = 'analog_output/'+str(channel_in)+'/'+str(value_in)
+            endpoint = 'pwm_output/'+str(channel_in)+'/'+str(value_in)
         else:
-            endpoint = 'analog_output/'+str(channel_in)+'/'+str(value_in)+'?port='+port_in
+            endpoint = 'pwm_output/'+str(channel_in)+'/'+str(value_in)+'?port='+port_in
         self.post_data(endpoint)
 
 

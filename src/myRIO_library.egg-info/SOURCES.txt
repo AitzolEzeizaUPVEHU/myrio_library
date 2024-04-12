@@ -17,6 +17,7 @@ src/myRIO_base/myRIO_base.py
 src/myRIO_base/version.py
 src/myRIO_base/data/Default.lvbitx
 src/myRIO_base/data/High-throughput.lvbitx
+src/myRIO_base/examples/PWM_tests.py
 src/myRIO_base/examples/PacManDeath.csv
 src/myRIO_base/examples/analog-inputs-and-outputs.py
 src/myRIO_base/examples/digital-inputs-and-outputs.py
