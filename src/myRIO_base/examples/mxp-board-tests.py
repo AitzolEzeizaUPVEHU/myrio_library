@@ -1,16 +1,16 @@
-""" Usage examples of the MyRIO class: MXP board tests
+"""Usage examples of the MyRIO class: MXP board tests
 
-    This examples show how to use the electronic components
-    we already have on our MXP boards. It serves as example of
-    more sophisticated functions we added to myRIO_base.
+This examples show how to use the electronic components
+we already have on our MXP boards. It serves as example of
+more sophisticated functions we added to myRIO_base.
 
-    Our MXP cards have an RGB LED connected to DIO_2:0 and 
-    two push buttons on DIO_4:3. We also have an NTC temperature
-    sensor in AI0 and an LDR light sensor in AI1. We use these
-    channels in our examples. The port that we use most is the 
-    A port, so we set it as default on our package. 
+Our MXP cards have an RGB LED connected to DIO_2:0 and
+two push buttons on DIO_4:3. We also have an NTC temperature
+sensor in AI0 and an LDR light sensor in AI1. We use these
+channels in our examples. The port that we use most is the
+A port, so we set it as default on our package.
 
-    Last update: 2024/03/14 Aitzol Ezeiza Ramos (UPV/EHU)
+Last update: 2024/03/14 Aitzol Ezeiza Ramos (UPV/EHU)
 """
 
 import myRIO_base as myRIO

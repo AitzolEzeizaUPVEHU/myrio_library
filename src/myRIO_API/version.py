@@ -1,5 +1,5 @@
 # version.py
-__version__ = "1.3.2"
+__version__ = "1.3.3"
 
 """ version notes
 0.2.0: added __del__ method to myRio class to close the connection
@@ -20,4 +20,5 @@ __version__ = "1.3.2"
 1.2.2: Minor fix in waveform example (2024/04/10)
 1.3.1: Added PWM capabilities (2024/04/12)
 1.3.2: Fixed minor bug (repeated API method) (2024/04/12)
+1.3.3: typing errors fixed (2024/04/15)
 """
