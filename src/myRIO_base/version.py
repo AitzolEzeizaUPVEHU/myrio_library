@@ -1,5 +1,5 @@
 # version.py
-__version__ = "1.4.3"
+__version__ = "1.4.4"
 
 """ version notes
 0.2.0: added __del__ method to myRio class to close the connection
