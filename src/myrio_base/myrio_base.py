@@ -164,7 +164,7 @@ class MyRIO:
         """when an instance is created, an nifpga session is created."""
         if session_bitfile == "":
             session_bitfile = pkg_resources.resource_filename(
-                "myRIO_base", "data/Default.lvbitx"
+                "myrio_base", "data/Default.lvbitx"
             )
 
         self.__session = Session(session_bitfile, session_resource)
@@ -740,7 +740,7 @@ if __name__ == "__main__":
 
     # Play a simple waveform using raw data
     print("Playing a simple waveform")
-    csv_file = pkg_resources.resource_filename("myRIO_base", "examples/PacManDeath.csv")
+    csv_file = pkg_resources.resource_filename("myrio_base", "examples/PacManDeath.csv")
     my_waveform = extract_waveform_from_csv_file(csv_file)
     myrio1.play_waveform(my_waveform)
 

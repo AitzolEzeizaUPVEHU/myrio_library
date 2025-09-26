@@ -21,6 +21,7 @@ src/myrio_base/examples/PacManDeath.csv
 src/myrio_base/examples/analog-inputs-and-outputs.py
 src/myrio_base/examples/digital-inputs-and-outputs.py
 src/myrio_base/examples/mxp-board-tests.py
+src/myrio_base/examples/threadsexample.py
 src/myrio_base/examples/waveform-test.py
 src/myrio_library.egg-info/PKG-INFO
 src/myrio_library.egg-info/SOURCES.txt
