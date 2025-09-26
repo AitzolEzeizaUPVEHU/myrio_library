@@ -1,17 +1,17 @@
 #!/bin/sh
 
 DAEMON="/usr/bin/python3"
-DAEMON_ARGS="/usr/lib/python3.5/site-packages/myRIO_API/myRIO_API.py"
-PIDFILE="/var/run/myRIO_API.pid"
+DAEMON_ARGS="/usr/lib/python3.5/site-packages/myrio_api/myrio_api.py"
+PIDFILE="/var/run/myrio_api.pid"
 
 start() {
-    echo "Starting myRIO_API..."
-    nohup $DAEMON $DAEMON_ARGS > /var/tmp/myRIO_API_log.txt 2>&1 &
+    echo "Starting myrio_api..."
+    nohup $DAEMON $DAEMON_ARGS > /var/tmp/myrio_api_log.txt 2>&1 &
     echo $! > $PIDFILE
 }
 
 stop() {
-    echo "Stopping myRIO_API..."
+    echo "Stopping myrio_api..."
     PID=$(cat $PIDFILE)
     kill $PID
 }

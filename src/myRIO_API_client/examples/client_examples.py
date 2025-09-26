@@ -1,4 +1,4 @@
-import myRIO_API_client as myAPIc
+import myrio_api_client as myAPIc
 from time import sleep
 
 myRIO = myAPIc.MyRIO_API_Client()

@@ -12,10 +12,10 @@ we set it as default on our package.
 Last update: 2024/03/07 Aitzol Ezeiza Ramos (UPV/EHU)
 """
 
-import myRIO_base
+import myrio_base
 import time
 
-myrio1 = myRIO_base.MyRIO()
+myrio1 = myrio_base.MyRIO()
 
 # Read digital port (the whole port), one channel, and the onboard button
 
@@ -70,12 +70,12 @@ time.sleep(1)
 
 print("One color at a time (3 reps)")
 for i in range(3):
-    myrio1.write_digital_port(myRIO_base.RED)
+    myrio1.write_digital_port(myrio_base.RED)
     time.sleep(1)
-    myrio1.write_digital_port(myRIO_base.GREEN)
+    myrio1.write_digital_port(myrio_base.GREEN)
     time.sleep(1)
-    myrio1.write_digital_port(myRIO_base.BLUE)
+    myrio1.write_digital_port(myrio_base.BLUE)
     time.sleep(1)
 
 print("End of digital tests")
-myrio1.write_digital_port(myRIO_base.RGB_OFF)
+myrio1.write_digital_port(myrio_base.RGB_OFF)

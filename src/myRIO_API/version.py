@@ -21,4 +21,5 @@ __version__ = "1.3.3"
 1.3.1: Added PWM capabilities (2024/04/12)
 1.3.2: Fixed minor bug (repeated API method) (2024/04/12)
 1.3.3: typing errors fixed (2024/04/15)
+1.4.3: PEP 625 compliance (2025/09/26)
 """

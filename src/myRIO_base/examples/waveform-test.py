@@ -8,7 +8,7 @@ there is a rudimentary way to play a waveform using raw data.
 Last update: 2024/04/10 Aitzol Ezeiza Ramos (UPV/EHU)
 """
 
-import myRIO_base as myRIO
+import myrio_base as myRIO
 import pkg_resources
 
 myrio1 = myRIO.MyRIO()

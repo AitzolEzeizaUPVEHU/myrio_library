@@ -12,10 +12,10 @@ we set it as default on our package.
 Last update: 2024/03/07 Aitzol Ezeiza Ramos (UPV/EHU)
 """
 
-import myRIO_base
+import myrio_base
 import time
 
-myrio1 = myRIO_base.MyRIO()
+myrio1 = myrio_base.MyRIO()
 
 # Read onboard accelerometer values
 print("Accelerometer test (5 seconds)")

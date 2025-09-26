@@ -28,7 +28,7 @@ Read the examples un the examples folder for more info.
 """
 
 from flask import Flask, jsonify, request
-import myRIO_base
+import myrio_base
 
 DEFAULT_HTTP_PORT = 8080
 

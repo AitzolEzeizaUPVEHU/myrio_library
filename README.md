@@ -1,4 +1,4 @@
-# myRIO_library - a library for working with NI myRIO in Python
+# myrio_library - a library for working with NI myRIO in Python
 
 This is a set of tools to program the NI myRIO programmable device using Python. The myRIO is an FPGA-based RT device that is programmed usually in LabVIEW.
 
@@ -29,7 +29,7 @@ https://oldwiki.archive.openwrt.org/doc/techref/opkg
 opkg update
 opkg install python3 python3-misc python-pip
 
-python -m pip install myRIO_library
+python -m pip install myrio_library
 
 Check the examples folder inside the site-packages/myRIO_library/examples
 folder for further help.
@@ -43,7 +43,7 @@ And finally, the third package of the library, myRIO_API_client,
 can run on any computer that supports Python. You can install it
 using pip:
 
-pip install myRIO_library
+pip install myrio_library
 
 This library is an improvement over nifpga, a Python library that
 gives access to the FPGA registers of NI targets with FPGA.
@@ -55,5 +55,5 @@ You will need communication with the myRIO (via USBLAN or WiFi)
 in order to use the API. More info in the specific docs about
 the myRIO_API_client package.
 
-Last update: 2025/09/25 Aitzol Ezeiza Ramos (University of the Basque Country - EHU)
+Last update: 2025/09/26 Aitzol Ezeiza Ramos (University of the Basque Country - EHU)
 

@@ -13,7 +13,8 @@ A port, so we set it as default on our package.
 Last update: 2024/03/14 Aitzol Ezeiza Ramos (UPV/EHU)
 """
 
-import myRIO_base as myRIO
+import myrio_base as myRIO
+from myrio_base import G, B, R, RGB_OFF
 from time import sleep
 
 myrio1 = myRIO.MyRIO()
@@ -39,3 +40,17 @@ myrio1.write_MXP_RGB_LED(myRIO.BLUE)
 sleep(1)
 print("RGB LED in MXP port A: OFF")
 myrio1.write_MXP_RGB_LED(myRIO.RGB_OFF)
+sleep(1)
+print("Green LED in MXP port A: ON")
+myrio1.write_only_one_MXP_LED(G, True)
+sleep(1)
+print("Blue LED in MXP port A: ON")
+myrio1.write_only_one_MXP_LED(B, True)
+sleep(1)
+print("Blue LED in MXP port A: OFF")
+myrio1.write_only_one_MXP_LED(B, False)
+sleep(1)
+print("RGB LED in MXP port A: OFF")
+myrio1.write_MXP_RGB_LED(myRIO.RGB_OFF)
+print("End of the test")
+del myrio1

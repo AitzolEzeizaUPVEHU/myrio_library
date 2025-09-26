@@ -9,7 +9,7 @@ RGB LED wired to the B port (pins 27, 29, 31) for our examples.
 Last update: 2024/04/12 Aitzol Ezeiza Ramos (UPV/EHU)
 """
 
-import myRIO_base as myRIO
+import myrio_base as myRIO
 from time import sleep
 
 myrio1 = myRIO.MyRIO()

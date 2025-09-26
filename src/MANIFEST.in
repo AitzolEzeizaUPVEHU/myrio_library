@@ -1,4 +1,4 @@
-include src/myRIO_base/data/*
-include src/myRIO_base/examples/*
-include src/myRIO_API/examples/*
-include src/myRIO_API_client/examples/*
+include src/myrio_base/data/*
+include src/myrio_base/examples/*
+include src/myrio_api/examples/*
+include src/myrio_api_client/examples/*

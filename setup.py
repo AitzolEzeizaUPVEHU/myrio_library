@@ -7,8 +7,8 @@ this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
 setup(
-    name="myRIO_library",
-    version="1.4.2",
+    name="myrio_library",
+    version="1.4.3",
     author="Aitzol Ezeiza Ramos",
     author_email="aitzol.ezeiza@ehu.eus",
     description="A library to control the myRIO board from National Instruments",
@@ -18,10 +18,10 @@ setup(
     package_dir={"": "src"},
     include_package_data=True,
     package_data={
-        "myRIO_base": ["data/*"],
-        "myRIO_base": ["examples/*"],
-        "myRIO_API": ["examples/*"],
-        "myRIO_API_client": ["examples/*"],
+        "myrio_base": ["data/*"],
+        "myrio_base": ["examples/*"],
+        "myrio_api": ["examples/*"],
+        "myrio_api_client": ["examples/*"],
     },
     classifiers=[
         "Programming Language :: Python :: 3",
