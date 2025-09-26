@@ -7,20 +7,23 @@ In this library, we have created some support functions and a class
 named MyRIO.
 """
 
-from nifpga import Session  # type: ignore
+from nifpga import Session
 from typing import Tuple, List
+from time import sleep
 import ctypes
 import pkg_resources
 
 
-# RGB constants
+# RGB constants: 1.4.1 added new colors and aliases
 
-RED = 2
-GREEN = 1
-BLUE = 4
-WHITE = 7
-RGB_OFF = 0
-
+GREEN = G = 1
+RED = R = 2
+YELLOW = Y = 3
+BLUE = B = 4
+CYAN = C = 5
+MAGENTA = M = 6
+WHITE = W = 7
+RGB_OFF = OFF = BLACK = 0
 
 # Support functions. They are not part of the class MyRIO, but they are used by it.
 # Feel free to use them in your own programs.
@@ -28,6 +31,8 @@ RGB_OFF = 0
 
 def u8_to_bits(u8_number: int) -> List[bool]:
     """This function converts u8 values to an array of Booleans"""
+    if u8_number < 0 or u8_number > 255:
+        raise ValueError("Input number must be in the range 0-255")
     mask = 1
     one_by_one = []
     for i in range(8):
@@ -37,22 +42,21 @@ def u8_to_bits(u8_number: int) -> List[bool]:
 
 
 def only_one_bit_on(bit_number: int, input_number: int = 0) -> int:
-    """This function switches on only one bit on a u8 integer"""
+    """This function sets the specified bit in a u8 integer, leaving other bits unchanged."""
+    if bit_number < 0 or bit_number > 7:
+        raise ValueError("Input bit number must be in the range 0-7")
     u8_number = 0
-    if bit_number <= 7:
-        u8_number = 1 << bit_number
+    u8_number = 1 << bit_number
     return input_number | u8_number
-    # TODO raise a warning if bit_number is too big
 
 
 def only_one_bit_off(bit_number: int, input_number: int = 0) -> int:
-    """This function switches on only one bit off a u8 integer"""
+    """This function clears (sets to 0) the specified bit in a u8 integer, leaving other bits unchanged."""
+    if bit_number < 0 or bit_number > 7:
+        raise ValueError("Input bit number must be in the range 0-7")
+    mask = 0xFF ^ (1 << bit_number)
+    return input_number & mask
 
-    if bit_number <= 7:
-        mask = ~(1 << bit_number)
-        return input_number & mask
-    else:
-        return input_number  # TODO raise a warning if bit_number is too big
 
 
 def raw_to_volts_AB(raw: int) -> float:
@@ -111,6 +115,7 @@ def volts_to_temperature(volts: float) -> float:
     """This function converts values in Volts
     to temperature in Celsius degrees
     """
+
     return ((volts - 1.7) * 10 / -0.3) + 20
 
 
@@ -118,6 +123,7 @@ def volts_to_luminosity(volts: float) -> float:
     """This function converts values in Volts
     to luminosity in percentage (0-100%)
     """
+
     return 100 - (volts * 30.3)
 
 
@@ -129,8 +135,10 @@ def extract_waveform_from_csv_file(file_name: str) -> List[int]:
     must be mono and quite shorts.
     We have tried the wave library from Python, but it does not work
     properly with the myRIO, so we have used the csv format that
-    can be easily generated (we used a simple LabVIEW program for that).
+    can be easily generated. We used a simple LabVIEW program for that. 
+    You can find the source code in the examples folder (myRIOAudioFile.zip).
     """
+
     # Open and read a csv file
     with open(file_name, "r") as file:
         data = file.readlines()  # Read all the lines of the file
@@ -161,10 +169,13 @@ class MyRIO:
 
         self.__session = Session(session_bitfile, session_resource)
         sys_handler = self.__session.registers["SYS.RDY"]
-        from time import sleep
 
-        while not sys_handler.read():  # TODO: What if the system is never ready?
+        timeout = 0
+        while not sys_handler.read():
             sleep(0.1)
+            timeout += 1
+            if timeout > 1000:  # 100 seconds timeout
+                raise TimeoutError("System not ready after 100 seconds")
 
     def check_if_ready(self) -> bool:
         """checks if system is ready"""
@@ -177,7 +188,6 @@ class MyRIO:
 
     def set_DIO_mask(self, mask_low: int = 7, mask_high: int = 0, port: str = "A"):
         """sets the DIO mask for defining the direction (IN/OUT) of the channels
-
         low 7, high 0 is the default for the design of our current MXP cards
         """
 
@@ -190,7 +200,6 @@ class MyRIO:
 
     def update_DIO_mask(self, channel: int, is_output: bool, port: str = "A"):
         """Updates the current DIO mask to change the behaviour of one channel"""
-
         dir_string_low = "DIO." + port + "_" + "7:0" + ".DIR"
         dir_string_high = "DIO." + port + "_" + "15:8" + ".DIR"
         mask_handler_low = self.__session.registers[dir_string_low]
@@ -215,7 +224,6 @@ class MyRIO:
 
     def read_analog_input(self, channel: int, port: str = "A") -> float:
         """returns the value in volts of one of the AI channels (default port: A)"""
-
         channel_string = "AI." + port + "_" + str(channel) + ".VAL"
         channel_handler = self.__session.registers[channel_string]
         if port == "A" or port == "B":
@@ -225,36 +233,40 @@ class MyRIO:
         elif port == "AudioIn_L" or port == "AudioIn_R":
             return raw_to_volts_audio(channel_handler.read())
         else:
-            # TODO how to report the exception (port name error)
-            return None
+            raise ValueError("Port name error: correct values are A, B, C, AudioIn_L, or AudioIn_R")
 
     def read_MXP_temperature(self, channel: int = 0, port: str = "A") -> float:
-        """returns the temperature in Celsius degrees of one of the
+        """returns the temperature in Celsius degrees of an NTC sensor connected to one of the
         AI channels (default channel:0, default port: A)
         """
+
         channel_string = "AI." + port + "_" + str(channel) + ".VAL"
         channel_handler = self.__session.registers[channel_string]
         if port == "A" or port == "B":
             return volts_to_temperature(raw_to_volts_AB(channel_handler.read()))
         else:
-            # TODO how to report the exception (port name error)
-            return None
+            raise ValueError("Port name error: correct values are A or B")
 
     def read_MXP_luminosity(self, channel: int = 1, port: str = "A") -> float:
-        """returns the luminosity in percentage of one of the
+        """returns the luminosity in percentage of an LDR sensor connected to one of the
         AI channels (default channel:1, default port: A)
         """
+
         channel_string = "AI." + port + "_" + str(channel) + ".VAL"
         channel_handler = self.__session.registers[channel_string]
         if port == "A" or port == "B":
             return volts_to_luminosity(raw_to_volts_AB(channel_handler.read()))
         else:
-            # TODO how to report the exception (port name error)
-            return None
+            raise ValueError("Port name error: correct values are A or B")
 
     def read_digital_input(self, channel: int, port: str = "A") -> bool:
         """returns the Boolean value of one of the DIO input channels (default port: A)"""
 
+        if port != "A" and port != "B" and port != "C":
+            raise ValueError("Port name error: correct values are A, B, or C")
+        if channel < 0 or channel > 15:
+            raise ValueError("Channel number error: correct values are 0-15")
+        
         # First, check if the function is asking for a channel
         # in the low byte (7:0) or in the high byte (15:8)
         if channel < 8:
@@ -270,41 +282,54 @@ class MyRIO:
         bool_array = u8_to_bits(raw_value)
         return bool_array[array_index]
 
+
     def read_digital_port(self, port: str = "A") -> List[bool]:
         """returns the Boolean values of the whole port (default port: A)"""
 
-        channel_string_low = "DIO." + port + "_7:0.IN"
-        channel_string_high = "DIO." + port + "_15:8.IN"
-        channel_handler_low = self.__session.registers[channel_string_low]
-        channel_handler_high = self.__session.registers[channel_string_high]
-        raw_value_low = channel_handler_low.read()
-        raw_value_high = channel_handler_high.read()
-        bool_array = u8_to_bits(raw_value_low) + u8_to_bits(raw_value_high)
-        return bool_array
+        if port == "A" or port == "B" or port == "C":
+
+            channel_string_low = "DIO." + port + "_7:0.IN"
+            channel_string_high = "DIO." + port + "_15:8.IN"
+            channel_handler_low = self.__session.registers[channel_string_low]
+            channel_handler_high = self.__session.registers[channel_string_high]
+            raw_value_low = channel_handler_low.read()
+            raw_value_high = channel_handler_high.read()
+            bool_array = u8_to_bits(raw_value_low) + u8_to_bits(raw_value_high)
+            return bool_array
+        else:
+            raise ValueError("Port name error: correct values are A, B, or C")
 
     def read_MXP_button(self, button: int = 1, port: str = "A") -> bool:
-        """returns the Boolean value of one of the MXP buttons (default port: A)
-        We spect 1 for the first button, 2 for the second one.
+        """returns the Boolean value of one of the MXP buttons that are mounted
+        on the MXP card (default port: A) We expect 1 for the first button, 
+        and 2 for the second one.
         Most of our cards have a black button first, a white button second.
         """
-        channel_string = "DIO." + port + "_7:0.IN"
-        array_index = int(button + 2)
-        channel_handler = self.__session.registers[channel_string]
-        raw_value = channel_handler.read()
-        bool_array = u8_to_bits(raw_value)
-        return bool_array[array_index]
+
+        if port == "A" or port == "B":
+            if button == 1 or button == 2:
+                channel_string = "DIO." + port + "_7:0.IN"
+                array_index = int(button + 2)
+                channel_handler = self.__session.registers[channel_string]
+                raw_value = channel_handler.read()
+                bool_array = u8_to_bits(raw_value)
+                return bool_array[array_index]
+            else:
+                raise ValueError("Button number error: correct values are 1 (black) or 2 (white)")
+        else:
+            raise ValueError("Port name error: correct values are A or B")
 
     def read_button(self) -> bool:
         """returns the Boolean value of the myRIO onboard button"""
-
         channel_string = "DI.BTN"
         channel_handler = self.__session.registers[channel_string]
         raw_value = channel_handler.read()
         return bool(raw_value)
+    
+    read_onboard_button = read_button  # alias for simplicity
 
     def read_analog_accelerometer(self) -> Tuple[float, float, float]:
         """returns the x, y, and z values in Gs of the onboard Accelerometer"""
-
         channel_string_x = "ACC.X.VAL"
         channel_string_y = "ACC.Y.VAL"
         channel_string_z = "ACC.Z.VAL"
@@ -332,13 +357,20 @@ class MyRIO:
 
         return x_value, y_value, z_value
 
+    read_onboard_accelerometer = read_analog_accelerometer  # alias for simplicity
+    read_accelerometer = read_analog_accelerometer  # alias for simplicity
+
     def write_leds_integer(self, raw_value: int):
         """changes the state of the myRIO onboard LEDs using an integer value"""
 
-        value = max(0, min(raw_value, 15))  # TODO: raising a warning when out of range?
-        channel_string = "DO.LED3:0"
-        channel_handler = self.__session.registers[channel_string]
-        channel_handler.write(value)
+        if raw_value < 0 or raw_value > 15:
+            raise ValueError("Input number must be in the range 0-15")
+        else:
+            channel_string = "DO.LED3:0"
+            channel_handler = self.__session.registers[channel_string]
+            channel_handler.write(raw_value)
+
+    write_onboard_leds_integer = write_leds_integer  # alias for simplicity
 
     def write_leds_booleans(self, boolean_values: List[bool]):
         """changes the state of the myRIO onboard LEDs using Booleans"""
@@ -352,7 +384,26 @@ class MyRIO:
         channel_string = "DO.LED3:0"
         channel_handler = self.__session.registers[channel_string]
         channel_handler.write(raw_value)
-        return None
+    
+    write_onboard_leds_booleans = write_leds_booleans  # alias for simplicity
+
+    def write_led(self, led_number: int, value: bool):
+        """changes the state of one of the myRIO onboard LEDs using a Boolean value"""
+
+        if led_number < 0 or led_number > 3:
+            raise ValueError("LED number must be in the range 0-3")
+        else:
+            channel_string = "DO.LED3:0"
+            channel_handler = self.__session.registers[channel_string]
+            raw_value = channel_handler.read()
+            if value:
+                new_value = only_one_bit_on(led_number, raw_value)
+            else:
+                new_value = only_one_bit_off(led_number, raw_value)
+            channel_handler.write(new_value)
+
+    write_onboard_led = write_led  # alias for simplicity
+    write_only_one_led = write_led  # alias for simplicity
 
     def write_digital_output(
         self,
@@ -366,6 +417,12 @@ class MyRIO:
         The defaults are set for the design of our current MXP cards:
         RGB LEDs at channels 0,1,2 (G,R,B) and buttons at channels 3,4. Rest unused.
         """
+
+        if port != "A" and port != "B" and port != "C":
+            raise ValueError("Port name error: correct values are A, B, or C")
+        if channel < 0 or channel > 15:
+            raise ValueError("Channel number error: correct values are 0-15")
+        
         self.set_DIO_mask(port=port, mask_low=mask_low, mask_high=mask_high)
 
         # Check if the function is asking for a channel
@@ -377,9 +434,6 @@ class MyRIO:
             channel_string = "DIO." + port + "_15:8.OUT"
             mask_string = "DIO." + port + "_15:8.DIR"
             channel = channel - 8
-        else:
-            # TODO raise an error if channel is out of range
-            return None
 
         mask_handler = self.__session.registers[mask_string]
         saved_mask = mask_handler.read()
@@ -411,6 +465,9 @@ class MyRIO:
         RGB LEDs at channels 0,1,2 (G,R,B) and buttons at channels 3,4. Rest unused.
         """
 
+        if port != "A" and port != "B" and port != "C":
+            raise ValueError("Port name error: correct values are A, B, or C")
+
         self.set_DIO_mask(port=port, mask_low=mask_low, mask_high=mask_high)
 
         channel_string_low = "DIO." + port + "_7:0.OUT"
@@ -421,16 +478,56 @@ class MyRIO:
         channel_handler_high.write(value_high)
 
     def write_MXP_RGB_LED(self, color: int, port: str = "A"):
-        """writes a color on the myRIO MXP RGB LED (default port: A)"""
+        """writes a three-bit color on the myRIO MXP RGB LED (default port: A)"""
+        if port != "A" and port != "B":
+            raise ValueError("Port name error: correct values are A, or B")
+        if color < 0 or color > 7:
+            raise ValueError("Color value error: correct values are 0-7 (OFF, G, R, Y, B, C, M, W)")
 
         self.set_DIO_mask(port=port)  # default mask is OK for the RGB LED
         channel_string_low = "DIO." + port + "_7:0.OUT"
         channel_handler_low = self.__session.registers[channel_string_low]
         channel_handler_low.write(color)
 
+    write_RGB = write_MXP_RGB_LED  # alias for simplicity
+
+    def write_only_one_MXP_LED(self, led_color: int, value: bool, port: str = "A"):
+        """writes a Boolean value on one of the myRIO MXP RGB LED channels (default port: A)
+        led_color: 1 for Green, 2 for Red, 4 for Blue.
+        The other combinations are not allowed in this function.
+        """
+
+        if port != "A" and port != "B":
+            raise ValueError("Port name error: correct values are A, or B")
+        if led_color != 1 and led_color != 2 and led_color != 4:
+            raise ValueError("LED color error: correct values are 1 (G), 2 (R), or 4 (B)")
+  
+        self.set_DIO_mask(port=port)  # default mask is OK for the RGB LED
+        channel_string_low = "DIO." + port + "_7:0.OUT"
+        channel_handler_low = self.__session.registers[channel_string_low]
+        saved_value = channel_handler_low.read()
+
+        if led_color == 1: # Green
+            channel = 0
+        elif led_color == 2: # Red
+            channel = 1
+        elif led_color == 4: # Blue
+            channel = 2
+
+        if value:
+            new_value = only_one_bit_on(channel, saved_value)
+        else:
+            new_value = only_one_bit_off(channel, saved_value)
+
+        channel_handler_low.write(new_value)
+
     def write_analog_output(self, channel: int, value: float, port: str = "A"):
         """writes a value (in volts) on an AO channel (default port: A)"""
-
+        if port != "A" and port != "B" and port != "C" and port != "AudioOut_L" and port != "AudioOut_R":
+            raise ValueError("Port name error: correct values are A, B, C, AudioOut_L, or AudioOut_R")
+        if channel < 0 or channel > 15:
+            raise ValueError("Channel number error: correct values are 0-15")
+        
         channel_string = "AO." + port + "_" + str(channel) + ".VAL"
         channel_handler = self.__session.registers[channel_string]
         if port == "A" or port == "B":
@@ -439,9 +536,7 @@ class MyRIO:
             raw_value = volts_to_raw_C(value)
         elif port == "AudioOut_L" or port == "AudioOut_R":
             raw_value = volts_to_raw_audio(value)
-        else:
-            # TODO how to report the exception (port name error)
-            raw_value = 0
+        
         channel_handler.write(raw_value)
         go_handler = self.__session.registers["AO.SYS.GO"]
         go_handler.write(True)
@@ -451,8 +546,7 @@ class MyRIO:
         if channel == "L" or channel == "R":
             channel_string = "AI.AudioIn_" + str(channel) + ".VAL"
         else:
-            # TODO how to report the exception (channel name error)
-            channel_string = "AI.AudioIn_L.VAL"
+            raise ValueError("Channel name error: correct values are L or R")
 
         channel_handler = self.__session.registers[channel_string]
         return raw_to_volts_audio(channel_handler.read())
@@ -462,8 +556,7 @@ class MyRIO:
         if channel == "L" or channel == "R":
             channel_string = "AO.AudioOut_" + str(channel) + ".VAL"
         else:
-            # TODO how to report the exception (channel name error)
-            channel_string = "AO.AudioOut_L.VAL"
+            raise ValueError("Channel name error: correct values are L or R")
 
         channel_handler = self.__session.registers[channel_string]
         raw_value = volts_to_raw_audio(value)
@@ -514,10 +607,16 @@ class MyRIO:
         The range of frequency is 40Hz-40KHz
         Returns X (the value of the MAX register)
         """
+
+        if port != "A" and port != "B":
+            raise ValueError("Port name error: correct values are A or B")
+        if channel < 0 or channel > 7:
+            raise ValueError("Channel number error: correct values are 0-7")
+            
         BASE_FREQUENCY = 40000000.0
 
         if (frequency < 40.0) or (frequency > 40000.0):
-            raise Exception("Frequency out of range (40Hz-40KHz)")
+            raise ValueError("Frequency out of range (40Hz-40KHz)")
         elif frequency < 80.0:
             divider_N = 16
             divider_code = 5
@@ -564,6 +663,13 @@ class MyRIO:
     ):
         """writes a duty cycle value (in percentage) on a PWM channel (default port: A)"""
 
+        if port != "A" and port != "B":
+            raise ValueError("Port name error: correct values are A or B")
+        if channel < 0 or channel > 7:
+            raise ValueError("Channel number error: correct values are 0-7")
+        if (duty_cycle < 0.0) or (duty_cycle > 100.0):
+            raise ValueError("Duty cycle out of range (0.0-100.0)")
+      
         duty_cycle_code = int(
             (duty_cycle / 100) * (X + 1)
         )  # X is the MAX value of the PWM counter
@@ -572,23 +678,36 @@ class MyRIO:
         channel_handler_cmp = self.__session.registers[channel_string_cmp]
         channel_handler_cmp.write(duty_cycle_code)
 
-    def display_color_PWM(self, R: int = 0, G: int = 0, B: int = 0):
+    def display_color_PWM(self, R: int = 0, G: int = 0, B: int = 0, port: str = "A"):
         """This is not a generic function, it is only an example.
-        It uses the PWM channels in port B to control an RGB
-        LED display. The frequencies of each channel and the resistors
+        It uses the PWM channels to control the RGB LED display we have on our MXP cards.
+        The frequencies of each channel and the resistors
         used in the circuit are specific for each RGB LED display.
+        In our case, the RGB LED display is connected to
+        channels 0,1,2 (G,R,B). Since PWM channels are mapped to different channels,
+        we have to connect PWM0 to the RED pin, PWM1 to the GREEN pin,
+        and PWM2 to the BLUE pin of the RGB LED display. Doing so, we must configure
+        channels 0 to 2 as inputs. This is done by setting the DIO mask to 00011111 (31).
+        The color values should be in the range 0-255.
         """
+
+        if port != "A" and port != "B":
+            raise ValueError("Port name error: correct values are A or B")
+        if (R < 0) or (R > 255) or (G < 0) or (G > 255) or (B < 0) or (B > 255):
+            raise ValueError("Color value error: correct values are 0-255")
+        
+        self.set_DIO_mask(mask_low=31, mask_high=0, port=port) # 00011111 = 31
 
         duty_cycle_R = int(R * 100 / 256)
         duty_cycle_G = int(G * 100 / 256)
         duty_cycle_B = int(B * 100 / 256)
 
-        X_0 = self.config_PWM_output(channel=0, frequency=5000.0, port="B")
-        X_1 = self.config_PWM_output(channel=1, port="B")
-        X_2 = self.config_PWM_output(channel=2, port="B")
-        self.write_PWM_output(channel=0, duty_cycle=duty_cycle_R, X=X_0, port="B")
-        self.write_PWM_output(channel=1, duty_cycle=duty_cycle_G, X=X_1, port="B")
-        self.write_PWM_output(channel=2, duty_cycle=duty_cycle_B, X=X_2, port="B")
+        X_0 = self.config_PWM_output(channel=0, frequency=5000.0, port=port)
+        X_1 = self.config_PWM_output(channel=1, port=port)
+        X_2 = self.config_PWM_output(channel=2, port=port)
+        self.write_PWM_output(channel=0, duty_cycle=duty_cycle_R, X=X_0, port=port)
+        self.write_PWM_output(channel=1, duty_cycle=duty_cycle_G, X=X_1, port=port)
+        self.write_PWM_output(channel=2, duty_cycle=duty_cycle_B, X=X_2, port=port)
 
 
 if __name__ == "__main__":
@@ -678,5 +797,5 @@ https://github.com/ni/nifpga-python/
 
 
 First version: 2024/02/28
-Current version: 2024/04/12
+Current version: 2025/09/25
 """

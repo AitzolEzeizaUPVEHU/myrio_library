@@ -22,6 +22,7 @@ src/myRIO_base/examples/PacManDeath.csv
 src/myRIO_base/examples/analog-inputs-and-outputs.py
 src/myRIO_base/examples/digital-inputs-and-outputs.py
 src/myRIO_base/examples/mxp-board-tests.py
+src/myRIO_base/examples/myRIOAudioFile.zip
 src/myRIO_base/examples/waveform-test.py
 src/myRIO_library.egg-info/PKG-INFO
 src/myRIO_library.egg-info/SOURCES.txt
