@@ -10,11 +10,11 @@ sensor in AI0 and an LDR light sensor in AI1. We use these
 channels in our examples. The port that we use most is the
 A port, so we set it as default on our package.
 
-Last update: 2024/03/14 Aitzol Ezeiza Ramos (UPV/EHU)
+Last update: 2025/09/26 Aitzol Ezeiza Ramos (UPV/EHU)
 """
 
 import myrio_base as myRIO
-from myrio_base import G, B, R, RGB_OFF
+from myrio_base import G, B, R, BLUE, GREEN, RED, RGB_OFF
 from time import sleep
 
 myrio1 = myRIO.MyRIO()
@@ -30,16 +30,16 @@ print("Push the second button to continue (DIO4)")
 while not (myrio1.read_MXP_button(2)):
     sleep(0.1)
 print("RGB LED in MXP port A: RED")
-myrio1.write_MXP_RGB_LED(myRIO.RED)
+myrio1.write_MXP_RGB_LED(RED)
 sleep(1)
 print("RGB LED in MXP port A: GREEN")
-myrio1.write_MXP_RGB_LED(myRIO.GREEN)
+myrio1.write_MXP_RGB_LED(GREEN)
 sleep(1)
 print("RGB LED in MXP port A: BLUE")
-myrio1.write_MXP_RGB_LED(myRIO.BLUE)
+myrio1.write_MXP_RGB_LED(BLUE)
 sleep(1)
 print("RGB LED in MXP port A: OFF")
-myrio1.write_MXP_RGB_LED(myRIO.RGB_OFF)
+myrio1.write_MXP_RGB_LED(RGB_OFF)
 sleep(1)
 print("Green LED in MXP port A: ON")
 myrio1.write_only_one_MXP_LED(G, True)
@@ -51,6 +51,6 @@ print("Blue LED in MXP port A: OFF")
 myrio1.write_only_one_MXP_LED(B, False)
 sleep(1)
 print("RGB LED in MXP port A: OFF")
-myrio1.write_MXP_RGB_LED(myRIO.RGB_OFF)
+myrio1.write_MXP_RGB_LED(RGB_OFF)
 print("End of the test")
 del myrio1

@@ -1,5 +1,5 @@
 # version.py
-__version__ = "1.4.6"
+__version__ = "1.4.7"
 
 """ version notes
 0.2.0: added __del__ method to myRio class to close the connection
@@ -24,4 +24,5 @@ __version__ = "1.4.6"
 1.4.1: Added new features and improvements (2025/09/25)
 1.4.2: Fixed minor bug in the setup.py file (2025/09/26)
 1.4.3: PEP 625 compliance (2025/09/26)
+1.4.7: Fixed minor bug in the example files (2025/09/26)
 """
